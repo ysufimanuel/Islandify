@@ -207,6 +207,9 @@
     <string name="apps_blocked">%1$d ब्लॉक</string>
     <string name="apps_allow_all">सभी की अनुमति दें</string>
     <string name="apps_block_all">सभी ब्लॉक करें</string>
+    <string name="home_notif_conflict_title">Hindari pop-up bertumpuk</string>
+    <string name="home_notif_conflict_body">Android mungkin menampilkan pop-up notifikasi sendiri di atas Islandify. Agar keduanya tidak muncul bersamaan, buka pengaturan notifikasi sistem, pilih aplikasi yang digunakan bersama Islandify, lalu nonaktifkan opsi pop-up / notifikasi mengambang. Tetap aktifkan notifikasi agar pesan masih tersedia di panel notifikasi. Android tidak mengizinkan Islandify menonaktifkan pop-up aplikasi lain secara otomatis.</string>
+    <string name="home_notif_conflict_button">Buka pengaturan notifikasi</string>
     <string name="notif_channel">Islandify स्थिति</string>
     <string name="notif_title">Islandify चल रहा है</string>
     <string name="notif_text">सेटिंग्स खोलने के लिए टैप करें</string>
