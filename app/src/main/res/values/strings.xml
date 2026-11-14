@@ -207,6 +207,9 @@
     <string name="apps_blocked">%1$d blocked</string>
     <string name="apps_allow_all">Allow all</string>
     <string name="apps_block_all">Block all</string>
+    <string name="home_notif_conflict_title">Avoid duplicate pop-ups</string>
+    <string name="home_notif_conflict_body">Android may show its own heads-up notification on top of Islandify. To prevent both from appearing, open system notification settings, choose the apps you use with Islandify, then turn off their pop-up / floating notification option. Keep notifications enabled so they remain in the notification shade. Android does not let Islandify disable another app’s heads-up pop-up automatically.</string>
+    <string name="home_notif_conflict_button">Open notification settings</string>
     <string name="notif_channel">Islandify status</string>
     <string name="notif_title">Islandify is running</string>
     <string name="notif_text">Tap to open settings</string>
