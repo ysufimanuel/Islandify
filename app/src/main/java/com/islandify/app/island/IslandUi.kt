@@ -265,7 +265,7 @@ private fun IslandBody(
         IslandLevel.Banner -> 48.dp
         IslandLevel.Expanded -> expandedHeight(mode)
         IslandLevel.Large -> when (mode) {
-            is IslandMode.Media -> 236.dp
+            is IslandMode.Media -> 310.dp
             is IslandMode.Notification -> if (mode.canReply || mode.canMarkRead) 224.dp else 200.dp
             is IslandMode.Live -> 168.dp
             else -> expandedHeight(mode)
@@ -769,6 +769,7 @@ private fun Expanded(m: IslandMode, level: IslandLevel, a: IslandActions) {
 
         is IslandMode.Media -> {
             val accent = m.accentColor(primary)
+            val lyrics by IslandController.lyrics.collectAsState()
             Column(
                 Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.SpaceBetween
@@ -791,6 +792,7 @@ private fun Expanded(m: IslandMode, level: IslandLevel, a: IslandActions) {
                         Modifier.height(28.dp).align(Alignment.CenterHorizontally),
                         bars = 24, barWidth = 4.dp, gap = 4.dp
                     )
+                    LyricsPanel(m, lyrics)
                     SeekBar(m, accent, a.onSeek)
                 }
                 Row(
@@ -1157,6 +1159,47 @@ private fun rememberElapsedSec(since: Long): Int {
         }
     }
     return sec
+}
+
+/** Shows the current lyric and nearby lines. Plain-lyrics timing is explicitly marked estimated. */
+@Composable
+private fun LyricsPanel(m: IslandMode.Media, result: LyricsResult?) {
+    var position by remember(m.title, m.artist) { mutableLongStateOf(m.currentPosition()) }
+    LaunchedEffect(m.title, m.artist, m.playing, m.positionMs, m.updatedAt, m.speed) {
+        position = m.currentPosition()
+        while (m.playing) {
+            delay(250)
+            position = m.currentPosition()
+        }
+    }
+
+    val lines = result?.lines.orEmpty()
+    val current = lines.indexOfLast { it.timeMs <= position }.coerceAtLeast(0)
+    Column(
+        Modifier.fillMaxWidth().heightIn(min = 38.dp, max = 64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        if (result == null || lines.isEmpty()) {
+            Label("Lyrics not available", color = Muted, size = 12, weight = FontWeight.Normal)
+        } else {
+            if (result.estimated) {
+                Label("Estimated timing", color = Muted, size = 9, weight = FontWeight.Normal)
+            }
+            val from = (current - 1).coerceAtLeast(0)
+            val to = (current + 1).coerceAtMost(lines.lastIndex)
+            for (index in from..to) {
+                val active = index == current
+                Label(
+                    lines[index].text,
+                    color = if (active) Color.White else Muted.copy(alpha = 0.62f),
+                    size = if (active) 14 else 11,
+                    weight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                    lines = 1
+                )
+            }
+        }
+    }
 }
 
 /** Tap to seek. The position advances by itself every 250 ms. */
