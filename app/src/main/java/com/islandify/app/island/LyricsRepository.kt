@@ -143,5 +143,5 @@ object LyricsRepository {
         }
     }
 
-    private fun enc(value: String): String = android.net.Uri.encode(value)
+    private fun enc(value: String): String = Uri.encode(value)
 }
