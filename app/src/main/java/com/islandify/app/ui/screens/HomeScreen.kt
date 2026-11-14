@@ -170,7 +170,7 @@ fun HomeScreen(tick: Int) {
             FilledTonalButton(
                 onClick = {
                     runCatching {
-                        startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
+                        ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
