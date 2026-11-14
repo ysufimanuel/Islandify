@@ -106,6 +106,9 @@ object IslandController {
     private var callDecline: PendingIntent? = null
 
     private var mediaMode: IslandMode.Media? = null
+    private val _lyrics = MutableStateFlow<LyricsResult?>(null)
+    val lyrics = _lyrics.asStateFlow()
+    private var lyricsJob: Job? = null
     private var timerMode: IslandMode.Timer? = null
     private var callMode: IslandMode.Call? = null
     private var liveMode: IslandMode.Live? = null
@@ -309,6 +312,26 @@ object IslandController {
 
     fun setMedia(m: IslandMode.Media?) {
         val old = mediaMode
+        val trackChanged = m == null || old == null || old.title != m.title || old.artist != m.artist
+        if (trackChanged) {
+            lyricsJob?.cancel()
+            _lyrics.value = null
+            if (m != null) {
+                val requestedTitle = m.title
+                val requestedArtist = m.artist
+                val requestedDuration = m.durationMs
+                lyricsJob = scope.launch {
+                    val result = runCatching {
+                        LyricsRepository.find(requestedTitle, requestedArtist, requestedDuration)
+                    }.getOrNull()
+                    // A slow response for the previous song must never replace the current song's lyrics.
+                    val current = mediaMode
+                    if (current?.title == requestedTitle && current.artist == requestedArtist) {
+                        _lyrics.value = result
+                    }
+                }
+            }
+        }
         // Only the position moved a little (normal playback)? Nothing to redraw.
         if (old != null && m != null && old.playing && m.playing &&
             old.title == m.title && old.artist == m.artist && old.art === m.art &&
