@@ -5,7 +5,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,17 +27,13 @@ object LyricsRepository {
 
             // 1) Search LRCLIB with title + artist.
             val full = runCatching {
-                searchLrclib(title, artist).firstNotNullOfOrNull { record ->
-                    parseRecord(record, durationMs)
-                }
+                bestRecord(searchLrclib(title, artist), title, artist, durationMs)
             }.getOrNull()
             if (full != null) return@withContext full
 
             // 2) Retry by title only. Artist metadata from media apps is often noisy.
             val titleOnly = runCatching {
-                searchLrclib(title, null).firstNotNullOfOrNull { record ->
-                    parseRecord(record, durationMs)
-                }
+                bestRecord(searchLrclib(title, null), title, null, durationMs)
             }.getOrNull()
             if (titleOnly != null) return@withContext titleOnly
 
@@ -66,6 +61,30 @@ object LyricsRepository {
         val arr = JSONArray(request("https://lrclib.net/api/search?$params"))
         return (0 until arr.length()).mapNotNull { arr.optJSONObject(it) }
     }
+
+    private fun bestRecord(
+        records: List<JSONObject>,
+        title: String,
+        artist: String?,
+        durationMs: Long
+    ): LyricsResult? {
+        val wantedTitle = normalize(title)
+        val wantedArtist = normalize(artist.orEmpty())
+        return records
+            .filter { normalize(it.optString("trackName").ifBlank { it.optString("name") }) == wantedTitle }
+            .sortedBy { record ->
+                val foundArtist = normalize(record.optString("artistName"))
+                val artistPenalty = if (wantedArtist.isBlank() || foundArtist == wantedArtist ||
+                    foundArtist.contains(wantedArtist) || wantedArtist.contains(foundArtist)
+                ) 0L else 1_000_000L
+                val foundDuration = (record.optDouble("duration", 0.0) * 1000).toLong()
+                artistPenalty + if (durationMs > 0 && foundDuration > 0) kotlin.math.abs(foundDuration - durationMs) else 0L
+            }
+            .firstNotNullOfOrNull { parseRecord(it, durationMs) }
+    }
+
+    private fun normalize(value: String): String =
+        value.lowercase().filter { it.isLetterOrDigit() }
 
     private fun parseRecord(record: JSONObject, durationMs: Long): LyricsResult? {
         if (record.optBoolean("instrumental")) return null
@@ -124,5 +143,5 @@ object LyricsRepository {
         }
     }
 
-    private fun enc(value: String): String = URLEncoder.encode(value, Charsets.UTF_8.name())
+    private fun enc(value: String): String = android.net.Uri.encode(value)
 }
