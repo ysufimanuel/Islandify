@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -155,6 +157,29 @@ fun HomeScreen(tick: Int) {
         }
 
         PreviewCard(scale, w, h)
+
+        /* ---------- Avoid duplicate system heads-up pop-ups ---------- */
+        SectionCard(
+            title = stringResource(R.string.home_notif_conflict_title),
+            icon = Icons.Rounded.NotificationsActive
+        ) {
+            Text(
+                stringResource(R.string.home_notif_conflict_body),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            FilledTonalButton(
+                onClick = {
+                    runCatching {
+                        startActivity(Intent(Settings.ACTION_NOTIFICATION_SETTINGS))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Rounded.Settings, null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.home_notif_conflict_button))
+            }
+        }
 
         /* ---------- Test ---------- */
         SectionCard(title = stringResource(R.string.home_test_title), icon = Icons.Rounded.AutoAwesome) {
